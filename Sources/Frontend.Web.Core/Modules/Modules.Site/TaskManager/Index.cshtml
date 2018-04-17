@@ -1,0 +1,333 @@
+﻿@using System.Web.Mvc
+@using System.Web.Mvc.Html
+@using System.Web.Optimization
+@using Translations
+@model Modules.Site.TaskManager.TaskManagerModel
+
+@{
+    Layout = "~/TaskManager.cshtml";
+}
+
+@section pagetitle
+{
+    @I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "title")
+}
+
+@section bodyscripts
+{
+    <script>
+        $(document).ready(function() {
+            $('#dataTables-tasks').DataTable({
+                responsive: true
+            });
+            $('#task-whencreated').datepicker();
+            $('#task-whencompleted').datepicker();
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+
+            function selectSetFirstElement(id) {
+                var firstOptionElement = $(id + ' option')[0];
+                var valueFirstOptionElement = $(firstOptionElement).val();
+                $(id).val(valueFirstOptionElement);
+            }
+
+            $('#dataTables-tasks').on('click',
+                '.btn-edit-task',
+                function (e) {
+                    var taskId = $(e.currentTarget).data('task-id');
+                    localStorage.setItem("update-task-id", taskId);
+                    $.Site.Libraries.Common.Preloader.Show();
+                    $.Site.Libraries.WebApi.Common.ExecuteAction({
+                        uri: $("#webapi-taskmanager-select").attr("href"),
+                        data:
+                        {
+                            Task:
+                            {
+                                Id: localStorage.getItem("update-task-id")
+                            }
+                        },
+                        onSuccess: function (response) {
+                            $('#task-name').val(response.Task.Name);
+                            $('#task-description').val(response.Task.Description);
+                            $('#task-whencreated').val(response.Task.JsWhenCreated),
+                            $('#task-whencompleted').val(response.Task.JsWhenCompleted),
+                            $('#task-reporter').val(response.Task.Reporter);
+                            $('#task-assignee').val(response.Task.Assignee);
+                            $('#btn-task-create').addClass('hidden');
+                            $('#btn-task-update').removeClass('hidden');
+                            $('#DialogBoxTask').modal('show');
+                        },
+                        onException: function (exception) { console.log(exception); },
+                        onExceptionFail: function (exception) { console.log(exception); },
+                        onAfterAction: function () { $.Site.Libraries.Common.Preloader.Hide(); }
+                    });
+                });
+
+            $('#dataTables-tasks').on('click',
+                '.btn-delete-task',
+                function(e) {
+                    var taskId = $(e.currentTarget).data('task-id');
+                    localStorage.setItem("delete-task-id", taskId);
+                });
+
+            $('#btn-task-create').on('click',
+                function(e) {
+                    $.Site.Libraries.Common.Preloader.Show();
+                    $.Site.Libraries.WebApi.Common.ExecuteAction({
+                        uri: $("#webapi-taskmanager-create").attr("href"),
+                        data:
+                        {
+                            Task:
+                            {
+                                Name: $('#task-name').val(),
+                                Description: $('#task-description').val(),
+                                WhenCreated: $('#task-whencreated').val(),
+                                WhenCompleted: $('#task-whencompleted').val(),
+                                Reporter: $('#task-reporter option:selected').val(),
+                                Assignee: $('#task-assignee option:selected').val()
+                            }
+                        },
+                        onAfterAction: function() { window.location.reload(false); }
+                    });
+                });
+
+            $('#btn-task-update').on('click',
+                function(e) {
+                    $.Site.Libraries.Common.Preloader.Show();
+                    $.Site.Libraries.WebApi.Common.ExecuteAction({
+                        uri: $("#webapi-taskmanager-update").attr("href"),
+                        data:
+                        {
+                            Task:
+                            {
+                                Id: localStorage.getItem("update-task-id"),
+                                Name: $('#task-name').val(),
+                                Description: $('#task-description').val(),
+                                WhenCreated: $('#task-whencreated').val(),
+                                WhenCompleted: $('#task-whencompleted').val(),
+                                Reporter: $('#task-reporter option:selected').val(),
+                                Assignee: $('#task-assignee option:selected').val()
+                            }
+                        },
+                        onAfterAction: function() { window.location.reload(false); }
+                    });
+                });
+
+            $('#confirmDeleteTask').on('click',
+                '.btn-yes',
+                function(e) {
+                    $.Site.Libraries.Common.Preloader.Show();
+                    $.Site.Libraries.WebApi.Common.ExecuteAction({
+                        uri: $("#webapi-taskmanager-delete").attr("href"),
+                        data:
+                        {
+                            Task:
+                            {
+                                Id: localStorage.getItem("delete-task-id")
+                            }
+                        },
+                        onAfterAction: function() { window.location.reload(false); }
+                    });
+                });
+
+            $('#btn-new-task').on('click',
+                function(e) {
+                    $('#task-name').val('');
+                    $('#task-description').val('');
+                    $('#task-whencreated').datepicker('setDate', 'today');
+                    $('#task-whencompleted').datepicker('setDate', 'today');
+                    selectSetFirstElement('#task-reporter');
+                    selectSetFirstElement('#task-assignee');
+                    $('#btn-task-update').addClass('hidden');
+                    $('#btn-task-create').removeClass('hidden');
+                    $('#DialogBoxTask').modal('show');
+                });
+        });
+
+    </script>
+}
+
+<a id="webapi-taskmanager-select" class="hidden" href="~/api/taskmanager/selecttask"></a>
+<a id="webapi-taskmanager-create" class="hidden" href="~/api/taskmanager/createtask"></a>
+<a id="webapi-taskmanager-update" class="hidden" href="~/api/taskmanager/updatetask"></a>
+<a id="webapi-taskmanager-delete" class="hidden" href="~/api/taskmanager/deletetask"></a>
+<div class="container">
+    
+    <div id="confirmDeleteTask" class="col-md-offset-2 col-md-8 modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cancel">
+                        <span aria-hidden="true">×</span>
+                    </button>                    
+                    <h4 class="modal-title">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "confirmdeletetask_modal_title")</h4>
+                </div>
+                <div class="modal-body text-align-center">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "confirmdeletetask_modal_message")</div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary btn-yes" type="button" data-dismiss="modal">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "confirmdeletetask_modal_button_yes")</button>
+                    <a class="btn btn-default" data-dismiss="modal" aria-label="Cancel" aria-hidden="true">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "modal_button_cancel")</a>
+                </div>
+            </div>
+        </div>
+    </div>    
+    
+    <div id="DialogBoxTask" class="col-md-offset-2 col-md-8 modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cancel">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <h4 class="modal-title">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "dialogboxtask_modal_title")</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-offset-1 col-md-10">
+                            <form role="form" class="form-horizontal">
+                                <div class="form-group">
+                                    <div class="col-md-4 text-align-right vertical-align-middle">
+                                        <label for="task-name" class="control-label">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_name")</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input id="task-name" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-4 text-align-right vertical-align-middle">
+                                        <label for="task-description" class="control-label">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_description")</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <textarea class="form-control" id="task-description"></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-4 text-align-right vertical-align-middle">
+                                        <label for="task-whencreated" class="control-label">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_whencreated")</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input id="task-whencreated" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-4 text-align-right vertical-align-middle">
+                                        <label for="task-whencompleted" class="control-label">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_whencompleted")</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input id="task-whencompleted" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-4 text-align-right vertical-align-middle">
+                                        <label for="task-reporter" class="control-label">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_reporter")</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <select id="task-reporter" class="form-control">
+                                            @foreach (var user in Model.Users)
+                                            {
+                                                <option value="@user">@user</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-4 text-align-right vertical-align-middle">
+                                        <label for="task-assignee" class="control-label">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_assignee")</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <select id="task-assignee" class="form-control">
+                                            @foreach (var user in Model.Users)
+                                            {
+                                                <option value="@user">@user</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>                            
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-md-offset-1 col-md-10">
+                            <button id="btn-task-create" class="btn btn-primary" type="button" data-dismiss="modal">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "dialogboxtask_modal_button_create")</button>
+                            <button id="btn-task-update" class="btn btn-primary" type="button" data-dismiss="modal">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "dialogboxtask_modal_button_update")</button>
+                            <a class="btn btn-default" data-dismiss="modal" aria-label="Cancel" aria-hidden="true">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "modal_button_cancel")</a>                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>      
+    
+    
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col-md-9 text-align-center h4">
+                            @I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "name_table")                            
+                        </div>                        
+                        <div class="col-md-3">
+                            <div class="row">
+                                <div class="col-md-offset-7 col-md-5">
+                                    <a id="btn-new-task" class="btn btn-primary col-md-12 text-align-left">
+                                        <i class="fa fa-fw fa-plus">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "button_new")</i>
+                                    </a>                                                                
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.panel-heading -->
+                <div class="panel-body">
+                    <table width="100%" class="table table-striped table-bordered table-hover" id="dataTables-tasks">
+                        <thead>
+                        <tr>
+                            <th class="col-md-1 text-align-center">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_id")</th>                            
+                            <th class="col-md-3 text-align-center">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_name")</th>
+                            <th class="col-md-1 text-align-center">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_whencreated")</th>  
+                            <th class="col-md-1 text-align-center">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_whencompleted")</th>
+                            <th class="col-md-2 text-align-center">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_reporter")</th>
+                            <th class="col-md-2 text-align-center">@I18NEngine.GetMvcHtmlString("modules.site.taskmanager.index", "th_assignee")</th>
+                            <th class="col-md-1 text-align-center"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            @{ var index = 0;}    
+                            @foreach (var task in Model.Tasks)
+                            {
+                                index++;
+                                var trClass = index % 2 == 1 ? "even" : "odd";
+                                <tr class="@trClass gradeA">
+                                    <td class="col-md-1 text-align-center">@index</td>                            
+                                    <td class="col-md-3 text-align-center">@task.Name</td>
+                                    <td class="col-md-1 text-align-center">@task.WhenCreated.ToShortDateString()</td>  
+                                    <td class="col-md-1 text-align-center">@task.WhenCompleted.ToShortDateString()</td>
+                                    <td class="col-md-2 text-align-center">@task.Reporter</td>
+                                    <td class="col-md-2 text-align-center">@task.Assignee</td>                                    
+
+                                    <td class="col-md-6 text-align-center">
+                                        <a class="blue btn-edit-task" data-task-id="@task.Id">
+                                            <i class="fa fa-fw fa-pencil"></i>
+                                        </a>
+                                        <a class="red btn-delete-task" data-toggle="modal" data-target="#confirmDeleteTask" data-task-id="@task.Id">
+                                            <i class="fa fa-fw fa-trash-o"></i>
+                                        </a>
+                                    </td>
+                                </tr>                            
+                            }
+                        </tbody>
+                    </table>
+                    <!-- /.table-responsive -->
+                </div>
+                <!-- /.panel-body -->
+            </div>
+            <!-- /.panel -->
+        </div>
+        <!-- /.col-lg-12 -->
+    </div>
+
+</div>

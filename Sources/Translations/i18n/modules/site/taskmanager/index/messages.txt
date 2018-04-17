@@ -1,0 +1,21 @@
+﻿title=[test work for worknest. task manager]
+name_table=[tasks]
+button_new=[new]
+
+th_id=[id]
+th_name=[name]
+th_description=[description]
+th_whencreated=[when created]
+th_whencompleted=[when completed]
+th_reporter=[reporter]
+th_assignee=[assignee]
+
+confirmdeletetask_modal_title=[confirm delete task]
+confirmdeletetask_modal_message=[are you sure?]
+confirmdeletetask_modal_button_yes=[yes]
+
+dialogboxtask_modal_title=[edit task]
+dialogboxtask_modal_button_create=[create]
+dialogboxtask_modal_button_update=[update]
+
+modal_button_cancel=[cancel]

@@ -1,0 +1,2 @@
+﻿menu_item_home=[home]
+menu_item_task_manager=[task manager]
