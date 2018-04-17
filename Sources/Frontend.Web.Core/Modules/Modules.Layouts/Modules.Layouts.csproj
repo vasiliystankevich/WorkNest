@@ -107,11 +107,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DetailsPages.generated.cs">
-      <DependentUpon>DetailsPages.cshtml</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <Compile Include="Login.generated.cs">
       <DependentUpon>Login.cshtml</DependentUpon>
       <AutoGen>True</AutoGen>
@@ -144,10 +139,6 @@
     <Content Include="Login.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>Login.generated.cs</LastGenOutput>
-    </Content>
-    <Content Include="DetailsPages.cshtml">
-      <Generator>RazorGenerator</Generator>
-      <LastGenOutput>DetailsPages.generated.cs</LastGenOutput>
     </Content>
     <None Include="packages.config" />
     <Content Include="TaskManager.cshtml">
